@@ -16,6 +16,7 @@ The effect is bassically described as a bunch of nodes which can be linked by a 
 [v] opt* nodes pass through canvas boundary and come through the opposite side
 [v] opt* draw only N closest distance lines
 [v] debug grids for Line and Group nodes
+[v] relative text and debug buttons
 
 ### Ideas
 [x] Node collision
@@ -24,5 +25,6 @@ The effect is bassically described as a bunch of nodes which can be linked by a 
 [x] Node dragging
 [x] Create artificial boundary inside canvas, so nodes can collide with it or pass through
 [x] Voronoi Nodes which can be arranged by some input (img, text, pixels) and given other node properties (lines and colour). Should be immovable so the voronoi can be seen :)
+[x] Ui with more buttons which are relative to width and height
 
 todo add screenshots
