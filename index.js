@@ -2,16 +2,16 @@
 // ##############################CONFIGURATION#############################
 // ########################################################################
 const FRAMES = 60;
-const WIDTH = window.innerWidth;
-const HEIGHT = window.innerHeight;
+const WIDTH = Math.floor(window.innerWidth);
+const HEIGHT = Math.floor(window.innerHeight);
 
 const INITIAL_NUMBER_OF_NODES = 50;
-const MAX_NUMBER_OF_NODES = 500;
+const MAX_NUMBER_OF_NODES = 5000;
 // When mouse is pressed
 const MAX_SPAWN_NODES = 150;
 const MIN_SPAWN_NODES = 15;
 
-const MAX_LINE_NODES = 150;
+const MAX_LINE_NODES = 300;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
 const MAX_NODE_LINE_DISTANCE = 55;
@@ -57,7 +57,7 @@ const MAX_REVIVED_NODES = 100;
 const MAX_VELOCITY = 0.2;
 const MIN_VELOCITY = 0.01;
 // When it reaches 0 the node will stop moving
-const MAX_LIFE_SPAN = 1000;
+const MAX_LIFE_SPAN = 150;
 // The speed of node aging
 const AGE_FACTOR = 0.03;
 
@@ -67,7 +67,8 @@ const DEAD_NODE_COLOUR = "#1E1CCAF7";
 const LINE_COLOUR = "#7097A8";
 
 const WIDTH_OFFSET = 0;
-const HEIGHT_OFFSET = 35;
+const HEIGHT_OFFSET = HEIGHT * 0.05;
+const REL_MIN_TEXT_SIZE = HEIGHT * 0.014;
 const TEXT_COLOUR = "#296664";
 const TEXT_BACKGROUND_COLOUR = "#0F0F1DF7";
 // ########################################################################
@@ -447,6 +448,10 @@ function hashLine(x1, y1, x2, y2) {
   );
 }
 
+function touchStarted() {
+  return mousePressed();
+}
+
 function mousePressed() {
   if (isDebugLineClick(mouseX, mouseY)) {
     if (!DEBUG_LINE) {
@@ -652,10 +657,10 @@ function updateNode(node) {
     let agingFactor = (1 - node.lifespan / MAX_LIFE_SPAN) / 100;
     node.vx =
       Math.sign(node.vx) *
-      Math.max(MIN_VELOCITY, Math.abs(node.vx - node.vx * agingFactor));
+      Math.min(MAX_VELOCITY, Math.max(MIN_VELOCITY, Math.abs(node.vx - node.vx * agingFactor)));
     node.vy =
       Math.sign(node.vy) *
-      Math.max(MIN_VELOCITY, Math.abs(node.vy - node.vy * agingFactor));
+      Math.min(MAX_VELOCITY, Math.max(MIN_VELOCITY, Math.abs(node.vy - node.vy * agingFactor)));
   }
   updateNodeCoord(node);
 }
@@ -760,7 +765,8 @@ function debugGrid(grid) {
       line(0, y, WIDTH, y);
     }
   }
-
+  strokeWeight(0.07);
+  textSize(REL_MIN_TEXT_SIZE);
   for (let y = 0; y < HEIGHT - HEIGHT_OFFSET; y += grid.cellSize)
     text(Math.floor(y / grid.cellSize), 0, y, 5);
   for (let x = 0; x < WIDTH - WIDTH_OFFSET; x += grid.cellSize)
@@ -806,6 +812,7 @@ function debugNodes(grid, representative) {
         point(adjacentNode.x, adjacentNode.y);
         adjacentNode.marked = true;
         strokeWeight(0.07);
+        textSize(REL_MIN_TEXT_SIZE);
         text(nodeCount++, adjacentNode.x, adjacentNode.y);
       }
     }
@@ -827,6 +834,18 @@ function debugNodes(grid, representative) {
   }
   pop();
 }
+const debugGroupNodesBtn = {
+  x: WIDTH * 0.13,
+  y: HEIGHT_OFFSET * 0.35,
+  width: WIDTH * 0.008,
+  height: WIDTH * 0.008
+}
+const debugLineNodesBtn = {
+  x: WIDTH * 0.13,
+  y: HEIGHT_OFFSET * 0.65,
+  width: WIDTH * 0.008,
+  height: WIDTH * 0.008
+}
 
 function drawNodeGardenHeader() {
   push();
@@ -836,37 +855,45 @@ function drawNodeGardenHeader() {
   stroke(textColour);
   fill(textColour);
   strokeWeight(0.1);
-  textSize(12);
+  textSize(REL_MIN_TEXT_SIZE);
   text(
     `Moving Nodes:${
       Math.min(MAX_NUMBER_OF_NODES, NODES.length) - DEAD_NODES.length
     }\nStopped Nodes:${DEAD_NODES.length}`,
-    WIDTH - 120,
-    5,
-    120
+    WIDTH * 0.86,
+    HEIGHT * 0.01,
+    WIDTH * 0.14
   );
-  strokeWeight(1);
-  textSize(16);
-  text(`Node Garden`, 5, 5, WIDTH * 0.66);
+  strokeWeight(HEIGHT_OFFSET * 0.02);
+  textSize(HEIGHT_OFFSET * 0.3);
+  text(`Node Garden`, WIDTH * 0.005, HEIGHT * 0.01, WIDTH * 0.66);
 
   strokeWeight(0.1);
-  textSize(10);
-  text(`Click to Debug Grids`, 5, 22, 100);
+  textSize(REL_MIN_TEXT_SIZE);
+  text(`Click to Debug Grids`, WIDTH * 0.03, HEIGHT * 0.03, WIDTH * 0.1);
 
   fill(debugColour);
   stroke(DEAD_NODE_COLOUR);
-  rect(100, 20, 18, 12);
+  rect(debugGroupNodesBtn.x, debugGroupNodesBtn.y, debugGroupNodesBtn.width, debugGroupNodesBtn.height);
   fill(DEAD_NODE_COLOUR);
-  rect(124, 20, 18, 12);
+  rect(debugLineNodesBtn.x, debugLineNodesBtn.y, debugLineNodesBtn.width, debugLineNodesBtn.height);
   pop();
 }
 
 function isDebugGroupClick(x, y) {
-  return 100 <= x && x <= 118 && 20 <= y && y <= 32;
+  return (
+    debugGroupNodesBtn.x <= x &&
+    x <= debugGroupNodesBtn.x + debugGroupNodesBtn.width &&
+    debugGroupNodesBtn.y <= y &&
+    y <= debugGroupNodesBtn.y + debugGroupNodesBtn.height);
 }
 
 function isDebugLineClick(x, y) {
-  return 124 <= x && x <= 142 && 20 <= y && y <= 32;
+  return (
+    debugLineNodesBtn.x <= x &&
+    x <= debugLineNodesBtn.x + debugLineNodesBtn.width &&
+    debugLineNodesBtn.y <= y &&
+    y <= debugLineNodesBtn.y + debugLineNodesBtn.height);
 }
 
 function getGenerateRandomColours() {
