@@ -6,22 +6,22 @@ const WIDTH = Math.floor(window.innerWidth);
 const HEIGHT = Math.floor(window.innerHeight);
 
 const INITIAL_NUMBER_OF_NODES = 50;
-const MAX_NUMBER_OF_NODES = 5000;
+const MAX_NUMBER_OF_NODES = 1000;
 // When mouse is pressed
-const MAX_SPAWN_NODES = 150;
+const MAX_SPAWN_NODES = 250;
 const MIN_SPAWN_NODES = 15;
 
-const MAX_LINE_NODES = 300;
+const MAX_LINE_NODES = 617;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
-const MAX_NODE_LINE_DISTANCE = 55;
-const MIN_NODE_LINE_DISTANCE = 15;
+const MAX_NODE_LINE_DISTANCE = 45;
+const MIN_NODE_LINE_DISTANCE = 25;
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT = 7;
 const MIN_NODE_DIAMETER = 2;
 const MAX_NODE_DIAMETER = 5;
 
-const MOUSE_MAX_NODE_LINE_DISTANCE = 65;
+const MOUSE_MAX_NODE_LINE_DISTANCE = 85;
 // 0 endless, 1 bounce
 const CHOSEN_NODE_COORD_UPDATE_FUNCTION = 1;
 /* Adjusts the final grid cell size. The larder the grid cell the higher
@@ -43,7 +43,7 @@ var lineRepr;
  * The range of this can be a random value between
  * `MIN_NODE_GROUP_PAINT_DISTANCE` and `MIN_NODE_GROUP_PAINT_DISTANCE`
  */
-const MAX_GROUP_NODES = 17;
+const MAX_GROUP_NODES = 67;
 // The maximum range a group node can extend its colour.
 // Also determines the `NODE_GARDEN_GROUP_GRID` cell size.
 const MAX_NODE_GROUP_PAINT_DISTANCE = 125;
@@ -53,11 +53,11 @@ const MIN_NODE_GROUP_PAINT_DISTANCE = 25;
 const REVIVE_ALL = true;
 // If true dead nodes just stop else they drift off the canvas
 const DEAD_NODES_STOP = false;
-const MAX_REVIVED_NODES = 100;
+const MAX_REVIVED_NODES = 200;
 const MAX_VELOCITY = 0.2;
 const MIN_VELOCITY = 0.01;
 // When it reaches 0 the node will stop moving
-const MAX_LIFE_SPAN = 150;
+const MAX_LIFE_SPAN = 1000;
 // The speed of node aging
 const AGE_FACTOR = 0.03;
 
@@ -67,8 +67,8 @@ const DEAD_NODE_COLOUR = "#1E1CCAF7";
 const LINE_COLOUR = "#7097A8";
 
 const WIDTH_OFFSET = 0;
-const HEIGHT_OFFSET = HEIGHT * 0.05;
-const REL_MIN_TEXT_SIZE = HEIGHT * 0.014;
+const HEIGHT_OFFSET = HEIGHT * 0.08;
+const REL_MIN_TEXT_SIZE = HEIGHT_OFFSET * 0.2;
 const TEXT_COLOUR = "#296664";
 const TEXT_BACKGROUND_COLOUR = "#0F0F1DF7";
 // ########################################################################
@@ -338,6 +338,7 @@ var textBackgroundColour;
 var textColour;
 var updateNodeCoord;
 var debugColour;
+var isPaused = false;
 
 function setup() {
   groupRepr = GROUP_NODES[0];
@@ -366,6 +367,7 @@ function setup() {
 }
 
 function draw() {
+  if (isPaused) return;
   drawnLines.clear();
   markNodesInGroupRange();
   closestIndex = 0;
@@ -383,6 +385,22 @@ function draw() {
   if (DEBUG_GROUP) debugNodes(NODE_GARDEN_GROUP_GRID, groupRepr);
   for (let i = 0; i < NODES.length; ++i) {
     updateNode(NODES[i]);
+  }
+  pauseIfNotFocused();
+}
+// https://forum.processing.org/two/discussion/27951/noloop-if-focused.html very helpful :)
+function pauseIfNotFocused() {
+  if (!focused) {
+    if (!isPaused) {
+      savedImage = get();
+      savedImage.filter(BLUR, 3);
+      isPaused = true;
+      image(savedImage, 0, 0);
+      noLoop();
+    }
+  } else {
+    isPaused = false;
+    loop();
   }
 }
 
@@ -453,6 +471,10 @@ function touchStarted() {
 }
 
 function mousePressed() {
+  if (isPaused) {
+    loop();
+    isPaused = !isPaused;
+  }
   if (isDebugLineClick(mouseX, mouseY)) {
     if (!DEBUG_LINE) {
       if (lineRepr && !lineRepr.isDead) {
@@ -477,15 +499,15 @@ function mousePressed() {
     if (!DEBUG_GROUP) {
       if (groupRepr && !groupRepr.isDead) {
         groupRepr.lifespan = 1000;
-        groupRepr.vx = Math.sign(groupRepr.vx) * MAX_VELOCITY;
-        groupRepr.vy = Math.sign(groupRepr.vy) * MAX_VELOCITY;
+        groupRepr.vx = Math.sign(groupRepr.vx) * MAX_VELOCITY / 2;
+        groupRepr.vy = Math.sign(groupRepr.vy) * MAX_VELOCITY / 2;
       } else {
         for (groupNode of GROUP_NODES) {
           if (!groupNode.isDead) {
             groupRepr = groupNode;
             groupRepr.lifespan = 1000;
-            groupRepr.vx = Math.sign(groupRepr.vx) * MAX_VELOCITY;
-            groupRepr.vy = Math.sign(groupRepr.vy) * MAX_VELOCITY;
+            groupRepr.vx = Math.sign(groupRepr.vx) * MAX_VELOCITY / 2;
+            groupRepr.vy = Math.sign(groupRepr.vy) * MAX_VELOCITY / 2;
             break;
           }
         }
@@ -834,17 +856,21 @@ function debugNodes(grid, representative) {
   }
   pop();
 }
+// ui lul
+const BTN_WIDTH = WIDTH * 0.014;
+const BTN_HEIGHT = HEIGHT * 0.014;
+
 const debugGroupNodesBtn = {
-  x: WIDTH * 0.13,
-  y: HEIGHT_OFFSET * 0.35,
-  width: WIDTH * 0.008,
-  height: WIDTH * 0.008
+  x: WIDTH * 0.14,
+  y: HEIGHT_OFFSET * 0.50,
+  width: BTN_WIDTH,
+  height: BTN_HEIGHT
 }
 const debugLineNodesBtn = {
-  x: WIDTH * 0.13,
-  y: HEIGHT_OFFSET * 0.65,
-  width: WIDTH * 0.008,
-  height: WIDTH * 0.008
+  x: WIDTH * 0.14,
+  y: HEIGHT_OFFSET * 0.75,
+  width: BTN_WIDTH,
+  height: BTN_HEIGHT
 }
 
 function drawNodeGardenHeader() {
@@ -865,17 +891,25 @@ function drawNodeGardenHeader() {
     WIDTH * 0.14
   );
   strokeWeight(HEIGHT_OFFSET * 0.02);
-  textSize(HEIGHT_OFFSET * 0.3);
+  textSize(HEIGHT_OFFSET * 0.4);
   text(`Node Garden`, WIDTH * 0.005, HEIGHT * 0.01, WIDTH * 0.66);
 
   strokeWeight(0.1);
   textSize(REL_MIN_TEXT_SIZE);
-  text(`Click to Debug Grids`, WIDTH * 0.03, HEIGHT * 0.03, WIDTH * 0.1);
+  text(`Click to Debug Grids`, WIDTH * 0.005, HEIGHT * 0.05, WIDTH * 0.2);
 
   fill(debugColour);
-  stroke(DEAD_NODE_COLOUR);
+  rect(debugGroupNodesBtn.x, debugGroupNodesBtn.y, debugGroupNodesBtn.width, debugGroupNodesBtn.height);
+  noFill();
+  stroke(nodeColour);
+  strokeWeight(debugGroupNodesBtn.x * 0.01);
   rect(debugGroupNodesBtn.x, debugGroupNodesBtn.y, debugGroupNodesBtn.width, debugGroupNodesBtn.height);
   fill(DEAD_NODE_COLOUR);
+  noStroke();
+  rect(debugLineNodesBtn.x, debugLineNodesBtn.y, debugLineNodesBtn.width, debugLineNodesBtn.height);
+  noFill();
+  stroke(nodeColour);
+  strokeWeight(debugLineNodesBtn.x * 0.01);
   rect(debugLineNodesBtn.x, debugLineNodesBtn.y, debugLineNodesBtn.width, debugLineNodesBtn.height);
   pop();
 }
