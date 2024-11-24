@@ -2,8 +2,8 @@
 // ##############################CONFIGURATION#############################
 // ########################################################################
 const FRAMES = 60;
-const WIDTH = 600;
-const HEIGHT = 600;
+const WIDTH = window.innerWidth;
+const HEIGHT = window.innerHeight;
 
 const INITIAL_NUMBER_OF_NODES = 50;
 const MAX_NUMBER_OF_NODES = 500;
