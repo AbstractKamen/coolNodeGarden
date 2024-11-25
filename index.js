@@ -622,10 +622,11 @@ function makeNode(
     node.lifespan = MAX_LIFE_SPAN;
     node.lineColour = nodeGroupLineColours[GROUP_NODES.length];
     node.isGroupNode = true;
-    node.groupDistance =
+    node.groupDistanceSq =
       MIN_NODE_GROUP_PAINT_DISTANCE +
       Math.random() *
       (MAX_NODE_GROUP_PAINT_DISTANCE - MIN_NODE_GROUP_PAINT_DISTANCE);
+    node.groupDistanceSq *= node.groupDistanceSq;
     GROUP_NODES.push(node);
   } else if (!node.isLineNode && linePtr < MAX_LINE_NODES) {
     node.lineColour = lineColour;
@@ -665,7 +666,7 @@ function markNodesInGroupRange() {
               let dNy = adjacentNode.y - currentNode.y;
               let distance = dNx * dNx + dNy * dNy;
               if (
-                distance < currentNode.groupDistance * currentNode.groupDistance &&
+                distance < currentNode.groupDistanceSq &&
                 (!adjacentNode.distanceFromGroupNode ||
                   adjacentNode.distanceFromGroupNode > distance)
               ) {
