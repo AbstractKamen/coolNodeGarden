@@ -14,7 +14,7 @@ const MIN_SPAWN_NODES = 15;
 const MAX_LINE_NODES = 1337;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
-const MAX_NODE_LINE_DISTANCE = 35;
+const MAX_NODE_LINE_DISTANCE = 50;
 const MIN_NODE_LINE_DISTANCE = 15;
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
@@ -29,7 +29,7 @@ const CHOSEN_NODE_COORD_UPDATE_FUNCTION = 1;
  * probability of nodes being needlessly iterated. A lower value means
  * less consistent distance mechanics for a small performance gain.
  */
-const GRID_FACTOR = 1.85;
+const GRID_FACTOR = 0.85;
 
 // Draws a 3x3 grid around a group node based on `NODE_GARDEN_GROUP_GRID`
 var DEBUG_GROUP = false;
