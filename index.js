@@ -6,18 +6,19 @@ const WIDTH = Math.floor(window.innerWidth);
 const HEIGHT = Math.floor(window.innerHeight);
 
 const INITIAL_NUMBER_OF_NODES = 50;
-const MAX_NUMBER_OF_NODES = 1000;
+const MAX_NUMBER_OF_NODES = 1500;
 // When mouse is pressed
 const MAX_SPAWN_NODES = 250;
 const MIN_SPAWN_NODES = 15;
 
-const MAX_LINE_NODES = 617;
+const MAX_LINE_NODES = 1337;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
-const MAX_NODE_LINE_DISTANCE = 45;
-const MIN_NODE_LINE_DISTANCE = 25;
+const MAX_NODE_LINE_DISTANCE = 35;
+const MIN_NODE_LINE_DISTANCE = 15;
 // Draws only the closest # lines
-const DRAW_CLOSEST_LINE_LIMIT = 7;
+const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
+const DRAW_CLOSEST_LINE_LIMIT_MAX = 11;
 const MIN_NODE_DIAMETER = 2;
 const MAX_NODE_DIAMETER = 5;
 
@@ -28,7 +29,7 @@ const CHOSEN_NODE_COORD_UPDATE_FUNCTION = 1;
  * probability of nodes being needlessly iterated. A lower value means
  * less consistent distance mechanics for a small performance gain.
  */
-const GRID_FACTOR = 0.85;
+const GRID_FACTOR = 1.85;
 
 // Draws a 3x3 grid around a group node based on `NODE_GARDEN_GROUP_GRID`
 var DEBUG_GROUP = false;
@@ -319,6 +320,10 @@ const nodeGroupColours = [];
 const nodeGroupLineColours = [];
 const distancesHeap = new BinaryHeap();
 
+const MAX_NODE_LINE_DISTANCE_SQ = MAX_NODE_LINE_DISTANCE * MAX_NODE_LINE_DISTANCE;
+const MIN_NODE_LINE_DISTANCE_SQ = MIN_NODE_LINE_DISTANCE * MIN_NODE_LINE_DISTANCE;
+const MOUSE_MAX_NODE_LINE_DISTANCE_SQ = MOUSE_MAX_NODE_LINE_DISTANCE * MOUSE_MAX_NODE_LINE_DISTANCE;
+
 const NODES = new Array(INITIAL_NUMBER_OF_NODES);
 const GROUP_NODES = [];
 const LINE_NODES = new Array(MAX_LINE_NODES);
@@ -422,8 +427,8 @@ function drawCurrentNode(currentNode) {
         if (adjacentNode.x != currentNode) {
           let dx = adjacentNode.x - currentNode.x;
           let dy = adjacentNode.y - currentNode.y;
-          let distance = Math.max(0, Math.sqrt(dx * dx + dy * dy));
-          if (MIN_NODE_LINE_DISTANCE <= distance && distance < MAX_NODE_LINE_DISTANCE) {
+          let distance = dx * dx + dy * dy;
+          if (MIN_NODE_LINE_DISTANCE_SQ <= distance && distance < currentNode.lineDistSq) {
             let drawnLine = hashLine(
               adjacentNode.x,
               adjacentNode.y,
@@ -446,11 +451,11 @@ function drawCurrentNode(currentNode) {
     }
   }
   for (
-    let j = 0; !distancesHeap.isEmpty() && j < DRAW_CLOSEST_LINE_LIMIT;
+    let j = 0; !distancesHeap.isEmpty() && j < currentNode.lineNeighbours;
     ++j
   ) {
     let nodeLine = distancesHeap.pop();
-    let diff = nodeLine.distance / MAX_NODE_LINE_DISTANCE;
+    let diff = nodeLine.distance / currentNode.lineDistSq;
     strokeWeight(1 - diff);
     stroke(currentNode.lineColour);
     line(nodeLine.x1, nodeLine.y1, nodeLine.x2, nodeLine.y2);
@@ -565,9 +570,9 @@ function drawMouseLine(currentNode) {
   let dMy = currentNode.y - my;
   let distFactor = currentNode.isGroupNode ? 2 : 1;
 
-  let mouseDistance = Math.sqrt(dMx * dMx + dMy * dMy) - currentNode.diameter;
-  if (mouseDistance < MOUSE_MAX_NODE_LINE_DISTANCE * distFactor) {
-    let mouseDiff = mouseDistance / (MOUSE_MAX_NODE_LINE_DISTANCE * distFactor);
+  let mouseDistance = dMx * dMx + dMy * dMy - currentNode.diameter;
+  if (mouseDistance < MOUSE_MAX_NODE_LINE_DISTANCE_SQ * distFactor) {
+    let mouseDiff = mouseDistance / (MOUSE_MAX_NODE_LINE_DISTANCE_SQ * distFactor);
     if (currentNode.isGroupNode) {
       strokeWeight(5 - 5 * mouseDiff);
     } else {
@@ -593,6 +598,10 @@ function makeNode(
   node.x = Math.min(x, WIDTH - WIDTH_OFFSET);
   node.y = Math.min(y, HEIGHT - HEIGHT_OFFSET);
   node.vx = MIN_VELOCITY + Math.random() * (MAX_VELOCITY - MIN_VELOCITY);
+  node.lineDistSq = MIN_NODE_LINE_DISTANCE + Math.random() * (MAX_NODE_LINE_DISTANCE - MIN_NODE_LINE_DISTANCE);
+  node.lineDistSq = node.lineDistSq*node.lineDistSq;
+  node.lineNeighbours = DRAW_CLOSEST_LINE_LIMIT_MIN + Math.random() * (DRAW_CLOSEST_LINE_LIMIT_MAX - DRAW_CLOSEST_LINE_LIMIT_MIN);
+
   if (Math.random() - 0.5 < 0) node.vx *= -1;
   node.vy = MIN_VELOCITY + Math.random() * (MAX_VELOCITY - MIN_VELOCITY);
   if (Math.random() - 0.5 < 0) node.vy *= -1;
@@ -654,9 +663,9 @@ function markNodesInGroupRange() {
             if (!adjacentNode.isGroupNode) {
               let dNx = adjacentNode.x - currentNode.x;
               let dNy = adjacentNode.y - currentNode.y;
-              let distance = Math.max(0, Math.sqrt(dNx * dNx + dNy * dNy));
+              let distance = dNx * dNx + dNy * dNy;
               if (
-                distance < currentNode.groupDistance &&
+                distance < currentNode.groupDistance * currentNode.groupDistance &&
                 (!adjacentNode.distanceFromGroupNode ||
                   adjacentNode.distanceFromGroupNode > distance)
               ) {
