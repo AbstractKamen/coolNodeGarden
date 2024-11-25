@@ -8,17 +8,17 @@ const HEIGHT = Math.floor(window.innerHeight);
 const INITIAL_NUMBER_OF_NODES = 50;
 const MAX_NUMBER_OF_NODES = 1500;
 // When mouse is pressed
-const MAX_SPAWN_NODES = 250;
+const MAX_SPAWN_NODES = 150;
 const MIN_SPAWN_NODES = 15;
 
-const MAX_LINE_NODES = 1337;
+const MAX_LINE_NODES = 919;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
 const MAX_NODE_LINE_DISTANCE = 50;
 const MIN_NODE_LINE_DISTANCE = 15;
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
-const DRAW_CLOSEST_LINE_LIMIT_MAX = 11;
+const DRAW_CLOSEST_LINE_LIMIT_MAX = 7;
 const MIN_NODE_DIAMETER = 2;
 const MAX_NODE_DIAMETER = 5;
 
@@ -47,7 +47,7 @@ var lineRepr;
 const MAX_GROUP_NODES = 67;
 // The maximum range a group node can extend its colour.
 // Also determines the `NODE_GARDEN_GROUP_GRID` cell size.
-const MAX_NODE_GROUP_PAINT_DISTANCE = 125;
+const MAX_NODE_GROUP_PAINT_DISTANCE = 85;
 // The minimum range a group node can extend its colour.
 const MIN_NODE_GROUP_PAINT_DISTANCE = 25;
 // If true all nodes are respawn when mouse is pressed
