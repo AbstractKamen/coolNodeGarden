@@ -10,15 +10,17 @@ const MAX_NUMBER_OF_NODES = 1500;
 // When mouse is pressed
 const MAX_SPAWN_NODES = 150;
 const MIN_SPAWN_NODES = 15;
-
+const MIN_LINE_NODES_SPAWN = 5;
+const MIN_GROUP_NODES_SPAWN = 3;
 const MAX_LINE_NODES = 919;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
 const MAX_NODE_LINE_DISTANCE = 50;
 const MIN_NODE_LINE_DISTANCE = 15;
+const LINE_BIAS_INFLUENCE = 1;
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
-const DRAW_CLOSEST_LINE_LIMIT_MAX = 7;
+const DRAW_CLOSEST_LINE_LIMIT_MAX = 9;
 const MIN_NODE_DIAMETER = 2;
 const MAX_NODE_DIAMETER = 5;
 
@@ -198,7 +200,7 @@ class NodeGardenGrid {
     for (let i = 0; i < gridHeight; ++i) {
       this.grid[i] = new Array(gridWidth);
       for (let j = 0; j < gridWidth; ++j) {
-        this.grid[i][j] = [];
+        this.grid[i][j] = new Map();
       }
     }
   }
@@ -206,13 +208,7 @@ class NodeGardenGrid {
   addNode(node) {
     let i = Math.floor(node.y / this.cellSize);
     let j = Math.floor(node.x / this.cellSize);
-    let index = binarySearch(this.grid[i][j], node);
-
-    if (index < 0) {
-      this.grid[i][j].splice(-index - 1, 0, node);
-    } else {
-      this.grid[i][j].splice(index, 0, node);
-    }
+    this.grid[i][j].set(node.id, node);
   }
 
   updateNode(node, newY, newX) {
@@ -228,34 +224,14 @@ class NodeGardenGrid {
 
     if (i1 == i2 && j1 == j2) return;
 
-    {
-      // remove node from old cell
-      let index = binarySearch(this.grid[i1][j1], node);
-      if (index < 0 || index >= this.grid[i1][j1].length) {
-        console.error(node, this.cellSize, i1, j1, this.grid);
-        throw new Error("Node to update doesn't exist at index: " + index);
-      }
-      this.grid[i1][j1].splice(index, 1);
-    }
-
-    // add node to new cell
-    let index = binarySearch(this.grid[i2][j2], node);
-    if (index < 0) {
-      this.grid[i2][j2].splice(-index - 1, 0, node);
-    } else {
-      this.grid[i2][j2].splice(index, 0, node);
-    }
+    this.grid[i1][j1].delete(node.id);
+    this.grid[i2][j2].set(node.id, node);
   }
 
   removeNode(node) {
     let i = Math.floor(node.y / this.cellSize);
     let j = Math.floor(node.x / this.cellSize);
-    let index = binarySearch(this.grid[i][j], node);
-    if (index < 0 || index >= this.grid[i][j].length) {
-      console.error(node, i, j, this.grid);
-      throw new Error("Node to remove doesn't exist at index: " + index);
-    }
-    this.grid[i][j].splice(index, 1);
+    this.grid[i][j].delete(node.id);
   }
 
   getCell(y, x, yDir, xDir) {
@@ -263,42 +239,7 @@ class NodeGardenGrid {
     if (i < 0 || i >= this.gridHeight) return EMPTY_CELL;
     let j = Math.floor(x / this.cellSize) + xDir;
     if (j < 0 || j >= this.gridWidth) return EMPTY_CELL;
-    return this.grid[i][j];
-  }
-}
-
-function binarySearch(arr, node) {
-  let low = 0;
-  let high = arr.length - 1;
-
-  while (low <= high) {
-    let mid = (low + high) >>> 1;
-    const cur = arr[mid];
-
-    let compareToRes = nodesCompare(cur, node);
-    if (compareToRes < 0) {
-      low = mid + 1;
-    } else if (compareToRes > 0) {
-      high = mid - 1;
-    } else {
-      return mid;
-    }
-  }
-
-  return -(low + 1);
-}
-
-function nodesCompare(cur, node) {
-  if (cur === undefined) {
-    return 1;
-  }
-
-  if (cur.id < node.id) {
-    return 1;
-  } else if (cur.id > node.id) {
-    return -1;
-  } else {
-    return 0;
+    return this.grid[i][j].values();
   }
 }
 
@@ -325,9 +266,8 @@ const MIN_NODE_LINE_DISTANCE_SQ = MIN_NODE_LINE_DISTANCE * MIN_NODE_LINE_DISTANC
 const MOUSE_MAX_NODE_LINE_DISTANCE_SQ = MOUSE_MAX_NODE_LINE_DISTANCE * MOUSE_MAX_NODE_LINE_DISTANCE;
 
 const NODES = new Array(INITIAL_NUMBER_OF_NODES);
-const GROUP_NODES = [];
+const GROUP_NODES = new Array(MAX_GROUP_NODES);
 const LINE_NODES = new Array(MAX_LINE_NODES);
-const drawnLines = new Set();
 const DEAD_NODES = [];
 const DISTANCE_LINES_POOL = new ObjectPool(MAX_NUMBER_OF_NODES);
 const UPDATE_NODE_COORD_FUNCTIONS_ARRAY = [
@@ -344,6 +284,8 @@ var textColour;
 var updateNodeCoord;
 var debugColour;
 var isPaused = false;
+var linePtr = 0;
+var groupPtr = 0;
 
 function setup() {
   groupRepr = GROUP_NODES[0];
@@ -360,7 +302,7 @@ function setup() {
   textColour = color(TEXT_COLOUR);
   textBackgroundColour = color(TEXT_BACKGROUND_COLOUR);
   for (let i = 0; i < NODES.length; ++i) {
-    let node = makeNode(
+    let node = makeNodePerCap(
       Math.floor(Math.random() * WIDTH),
       Math.floor(Math.random() * HEIGHT)
     );
@@ -373,7 +315,6 @@ function setup() {
 
 function draw() {
   if (isPaused) return;
-  drawnLines.clear();
   markNodesInGroupRange();
   closestIndex = 0;
   background(backgroundColour);
@@ -409,13 +350,32 @@ function pauseIfNotFocused() {
   }
 }
 
+function drawLineCells() {
+  for (let i = 0; i < NODE_GARDEN_LINE_GRID.gridHeight; ++i) {
+    for (let j = 0; j < NODE_GARDEN_LINE_GRID.gridWidth; ++j) {
+      let currentCell = NODE_GARDEN_LINE_GRID.getCell(i, j, 0, 0);
+
+      for (let k = 0; k < currentCell.length; ++k) {
+        let currentNode = currentCell[k];
+        for (let l = k + 1; l < currentCell.length; ++l) {
+          let adjacentNode = currentCell[k];
+        }
+      }
+    }
+  }
+}
+
 function drawCurrentNode(currentNode) {
   if (currentNode.isDead && !DEAD_NODES_STOP) return;
   stroke(currentNode.colour);
   strokeWeight(currentNode.diameter);
   point(currentNode.x, currentNode.y);
-  if (!currentNode.isLineNode) return;
   drawMouseLine(currentNode);
+  drawLineNodeConnections(currentNode);
+  drawGroupNodeConnections(currentNode);
+}
+function drawGroupNodeConnections(currentNode) {
+  if (!currentNode.isGroupNode) return;
   for (let dy = -1; dy <= 1; ++dy) {
     for (let dx = -1; dx <= 1; ++dx) {
       for (let adjacentNode of NODE_GARDEN_LINE_GRID.getCell(
@@ -424,27 +384,18 @@ function drawCurrentNode(currentNode) {
           dy,
           dx
         )) {
-        if (adjacentNode.x != currentNode) {
+        if (!adjacentNode.isGroupNode) {
           let dx = adjacentNode.x - currentNode.x;
           let dy = adjacentNode.y - currentNode.y;
           let distance = dx * dx + dy * dy;
           if (MIN_NODE_LINE_DISTANCE_SQ <= distance && distance < currentNode.lineDistSq) {
-            let drawnLine = hashLine(
-              adjacentNode.x,
-              adjacentNode.y,
-              currentNode.x,
-              currentNode.y
-            );
-            if (!drawnLines.has(drawnLine)) {
-              drawnLines.add(drawnLine);
-              let newLine = DISTANCE_LINES_POOL.getObject();
-              newLine.distance = distance;
-              newLine.x1 = currentNode.x;
-              newLine.y1 = currentNode.y;
-              newLine.x2 = adjacentNode.x;
-              newLine.y2 = adjacentNode.y;
-              distancesHeap.push(newLine);
-            }
+            let newLine = DISTANCE_LINES_POOL.getObject();
+            newLine.distance = distance;
+            newLine.x1 = currentNode.x;
+            newLine.y1 = currentNode.y;
+            newLine.x2 = adjacentNode.x;
+            newLine.y2 = adjacentNode.y;
+            distancesHeap.push(newLine);
           }
         }
       }
@@ -462,13 +413,43 @@ function drawCurrentNode(currentNode) {
   }
 }
 
-function hashLine(x1, y1, x2, y2) {
-  return (
-    (x1 + 10000) * 1e2 +
-    (y1 + 10000) * 1e4 +
-    (x2 + 10000) * 1e2 +
-    (y2 + 10000) * 1e4
-  );
+function drawLineNodeConnections(currentNode) {
+  if (!currentNode.isLineNode) return;
+  for (let dy = -1; dy <= 1; ++dy) {
+    for (let dx = -1; dx <= 1; ++dx) {
+      for (let adjacentNode of NODE_GARDEN_LINE_GRID.getCell(
+          currentNode.y,
+          currentNode.x,
+          dy,
+          dx
+        )) {
+        if (currentNode.lineGroup != adjacentNode.lineGroup) {
+          let dx = adjacentNode.x - currentNode.x;
+          let dy = adjacentNode.y - currentNode.y;
+          let distance = dx * dx + dy * dy;
+          if (MIN_NODE_LINE_DISTANCE_SQ <= distance && distance < currentNode.lineDistSq) {
+            let newLine = DISTANCE_LINES_POOL.getObject();
+            newLine.distance = distance;
+            newLine.x1 = currentNode.x;
+            newLine.y1 = currentNode.y;
+            newLine.x2 = adjacentNode.x;
+            newLine.y2 = adjacentNode.y;
+            distancesHeap.push(newLine);
+          }
+        }
+      }
+    }
+  }
+  for (
+    let j = 0; !distancesHeap.isEmpty() && j < currentNode.lineNeighbours;
+    ++j
+  ) {
+    let nodeLine = distancesHeap.pop();
+    let diff = nodeLine.distance / currentNode.lineDistSq;
+    strokeWeight(1 - diff);
+    stroke(currentNode.lineColour);
+    line(nodeLine.x1, nodeLine.y1, nodeLine.x2, nodeLine.y2);
+  }
 }
 
 function touchStarted() {
@@ -533,11 +514,22 @@ function mousePressed() {
     HEIGHT - HEIGHT_OFFSET,
     Math.max(0, mouseY - HEIGHT_OFFSET)
   );
+  let minLineNodes = MIN_LINE_NODES_SPAWN;
+  let minGroupNodes = MIN_GROUP_NODES_SPAWN;
   if (NODES.length < MAX_NUMBER_OF_NODES) {
     for (let i = NODES.length; i < nodeLimit; ++i) {
       let x = mx + Math.random();
       let y = my + Math.random();
-      let node = makeNode(x, y);
+      let node = undefined;
+      if (minLineNodes > 0) {
+        minLineNodes--;
+        node = makeLineNode(x, y);
+      } else if (minGroupNodes > 0) {
+        minGroupNodes--;
+        node = makeGroupNode(x, y);
+      } else {
+        node = makeNodePerCap(x, y);
+      }
       NODES[i] = node;
       NODE_GARDEN_LINE_GRID.addNode(node);
       NODE_GARDEN_GROUP_GRID.addNode(node);
@@ -568,7 +560,7 @@ function drawMouseLine(currentNode) {
   let my = mouseY - HEIGHT_OFFSET;
   let dMx = currentNode.x - mx;
   let dMy = currentNode.y - my;
-  let distFactor = currentNode.isGroupNode ? 2 : 1;
+  let distFactor = currentNode.isGroupNode ? 2 : 0.5;
 
   let mouseDistance = dMx * dMx + dMy * dMy - currentNode.diameter;
   if (mouseDistance < MOUSE_MAX_NODE_LINE_DISTANCE_SQ * distFactor) {
@@ -585,12 +577,81 @@ function drawMouseLine(currentNode) {
 }
 
 var nodeIdIndex = 0;
+const HALF_MAX_LINE_DIST = MAX_NODE_LINE_DISTANCE >> 1;
+/**
+ *  Makes a line node which can connect to plain nodes or 
+ *  lined nodes of another lineGroup (2 groups currently)
+ * @param {*} x x coord
+ * @param {*} y y coord
+ * @param {*} node template if reviving node
+ * @returns line node or plain node if above capacity
+ */
+function makeLineNode(x, y, node) {
+  let wasUndefined = node == undefined;
+  node = makeNode(x, y, node);
+  if (wasUndefined && linePtr < MAX_LINE_NODES) {
+    node.lineColour = lineColour;
+    node.isLineNode = true;
+    LINE_NODES[linePtr++] = node;
+    node.lineGroup = Math.random() - 1 > 0;
+    node.lineDistSq = getRndBias(MIN_NODE_LINE_DISTANCE, HALF_MAX_LINE_DIST, HALF_MAX_LINE_DIST, LINE_BIAS_INFLUENCE);
+    node.lineDistSq = node.lineDistSq * node.lineDistSq;
+    node.lineNeighbours = DRAW_CLOSEST_LINE_LIMIT_MIN + Math.random() * (DRAW_CLOSEST_LINE_LIMIT_MAX - DRAW_CLOSEST_LINE_LIMIT_MIN);
+  } else if (node.isLineNode) {
+    node.lineGroup = Math.random() - 1 > 0;
+    node.lineDistSq = getRndBias(MIN_NODE_LINE_DISTANCE, HALF_MAX_LINE_DIST, HALF_MAX_LINE_DIST, LINE_BIAS_INFLUENCE);
+    node.lineDistSq = node.lineDistSq * node.lineDistSq;
+    node.lineNeighbours = DRAW_CLOSEST_LINE_LIMIT_MIN + Math.random() * (DRAW_CLOSEST_LINE_LIMIT_MAX - DRAW_CLOSEST_LINE_LIMIT_MIN);
+  }
+  return node;
+}
+
+// https://stackoverflow.com/questions/29325069/how-to-generate-random-numbers-biased-towards-one-value-in-a-range
+function getRndBias(min, max, bias, influence) {
+  var rnd = Math.random() * (max - min) + min,   // random in range
+      mix = Math.random() * influence;           // random mixer
+  return rnd * (1 - mix) + bias * mix;           // mix full range and bias
+}
+function makeGroupNode(x, y, node) {
+  let wasUndefined = node == undefined;
+  node = makeNode(x, y, node);
+  if (wasUndefined && groupPtr < MAX_GROUP_NODES) {
+    node.lineColour = nodeGroupLineColours[groupPtr];
+    node.colour = nodeGroupColours[groupPtr];
+    node.isGroupNode = true;
+    GROUP_NODES[groupPtr++] = node;
+
+    node.diameter = MAX_NODE_DIAMETER * 2;
+    node.lifespan = MAX_LIFE_SPAN;
+    node.groupDistanceSq =
+      MIN_NODE_GROUP_PAINT_DISTANCE +
+      Math.random() *
+      (MAX_NODE_GROUP_PAINT_DISTANCE - MIN_NODE_GROUP_PAINT_DISTANCE);
+    node.groupDistanceSq *= node.groupDistanceSq;
+  } else if (node.isGroupNode) {
+    node.diameter = MAX_NODE_DIAMETER * 2;
+    node.lifespan = MAX_LIFE_SPAN;
+    node.groupDistanceSq =
+      MIN_NODE_GROUP_PAINT_DISTANCE +
+      Math.random() *
+      (MAX_NODE_GROUP_PAINT_DISTANCE - MIN_NODE_GROUP_PAINT_DISTANCE);
+    node.groupDistanceSq *= node.groupDistanceSq;
+  }
+  return node;
+}
+
+function makeNodePerCap(x, y, node) {
+  if (groupPtr < MAX_GROUP_NODES) return makeGroupNode(x, y, node);
+  if (linePtr < MAX_LINE_NODES) return makeLineNode(x, y, node);
+  return makeNode(x, y, node);
+}
 
 function makeNode(
   x = Math.random() * (WIDTH - WIDTH_OFFSET),
   y = Math.random() * (HEIGHT - HEIGHT_OFFSET),
   node = {
     id: nodeIdIndex++,
+    colour: nodeColour,
     x: x,
     y: y,
   }
@@ -598,48 +659,17 @@ function makeNode(
   node.x = Math.min(x, WIDTH - WIDTH_OFFSET);
   node.y = Math.min(y, HEIGHT - HEIGHT_OFFSET);
   node.vx = MIN_VELOCITY + Math.random() * (MAX_VELOCITY - MIN_VELOCITY);
-  node.lineDistSq = MIN_NODE_LINE_DISTANCE + Math.random() * (MAX_NODE_LINE_DISTANCE - MIN_NODE_LINE_DISTANCE);
-  node.lineDistSq = node.lineDistSq*node.lineDistSq;
-  node.lineNeighbours = DRAW_CLOSEST_LINE_LIMIT_MIN + Math.random() * (DRAW_CLOSEST_LINE_LIMIT_MAX - DRAW_CLOSEST_LINE_LIMIT_MIN);
 
   if (Math.random() - 0.5 < 0) node.vx *= -1;
   node.vy = MIN_VELOCITY + Math.random() * (MAX_VELOCITY - MIN_VELOCITY);
   if (Math.random() - 0.5 < 0) node.vy *= -1;
-  if (node.isGroupNode) {
-    node.diameter = MAX_NODE_DIAMETER * 2;
-    node.lifespan = MAX_LIFE_SPAN;
-  } else {
-    node.lifespan = Math.floor(Math.random() * MAX_LIFE_SPAN);
-    node.diameter =
-      MIN_NODE_DIAMETER +
-      Math.random() * (MAX_NODE_DIAMETER - MIN_NODE_DIAMETER);
-  }
-
-  if (GROUP_NODES.length < MAX_GROUP_NODES) {
-    node.isLineNode = true;
-    node.colour = nodeGroupColours[GROUP_NODES.length];
-    node.diameter = MAX_NODE_DIAMETER * 2;
-    node.lifespan = MAX_LIFE_SPAN;
-    node.lineColour = nodeGroupLineColours[GROUP_NODES.length];
-    node.isGroupNode = true;
-    node.groupDistanceSq =
-      MIN_NODE_GROUP_PAINT_DISTANCE +
-      Math.random() *
-      (MAX_NODE_GROUP_PAINT_DISTANCE - MIN_NODE_GROUP_PAINT_DISTANCE);
-    node.groupDistanceSq *= node.groupDistanceSq;
-    GROUP_NODES.push(node);
-  } else if (!node.isLineNode && linePtr < MAX_LINE_NODES) {
-    node.lineColour = lineColour;
-    node.isLineNode = true;
-    LINE_NODES[linePtr++] = node;
-    node.colour = nodeColour;
-  } else if (!node.colour) {
-    node.colour = nodeColour;
-  }
+  node.lifespan = Math.floor(Math.random() * MAX_LIFE_SPAN);
+  node.diameter =
+    MIN_NODE_DIAMETER +
+    Math.random() * (MAX_NODE_DIAMETER - MIN_NODE_DIAMETER);
   return node;
 }
 
-var linePtr = 0;
 
 function markNodesInGroupRange() {
   for (let i = 0; i < NODES.length; ++i) {
@@ -652,7 +682,7 @@ function markNodesInGroupRange() {
   }
   for (let i = 0; i < NODES.length; ++i) {
     let currentNode = NODES[i];
-    if ((DEAD_NODES_STOP || !currentNode.isDead) && currentNode.isGroupNode) {
+    if (currentNode.isGroupNode) {
       for (let dy = -1; dy <= 1; ++dy) {
         for (let dx = -1; dx <= 1; ++dx) {
           for (let adjacentNode of NODE_GARDEN_GROUP_GRID.getCell(
@@ -686,7 +716,7 @@ function updateNode(node) {
   if (!node.isDead) {
     node.lifespan = Math.max(0, node.lifespan - AGE_FACTOR * deltaTime);
     // nodes go slower as they age
-    let agingFactor = (1 - node.lifespan / MAX_LIFE_SPAN) / 100;
+    let agingFactor = (1 - node.lifespan / MAX_LIFE_SPAN) / 200;
     node.vx =
       Math.sign(node.vx) *
       Math.min(MAX_VELOCITY, Math.max(MIN_VELOCITY, Math.abs(node.vx - node.vx * agingFactor)));
