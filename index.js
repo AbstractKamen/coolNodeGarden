@@ -5,33 +5,33 @@ const FRAMES = 60;
 const WIDTH = Math.floor(window.innerWidth);
 const HEIGHT = Math.floor(window.innerHeight);
 
-const INITIAL_NUMBER_OF_NODES = 50;
-const MAX_NUMBER_OF_NODES = 1500;
+const INITIAL_NUMBER_OF_NODES = 350;
+const MAX_NUMBER_OF_NODES = 5000;
 // When mouse is pressed
-const MAX_SPAWN_NODES = 150;
-const MIN_SPAWN_NODES = 15;
+const MAX_SPAWN_NODES = 200;
+const MIN_SPAWN_NODES = 50;
 const MIN_LINE_NODES_SPAWN = 5;
 const MIN_GROUP_NODES_SPAWN = 3;
-const MAX_LINE_NODES = 919;
+const MAX_LINE_NODES = 1919;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
-const MAX_NODE_LINE_DISTANCE = 50;
+const MAX_NODE_LINE_DISTANCE = 70;
 const MIN_NODE_LINE_DISTANCE = 15;
 const LINE_BIAS_INFLUENCE = 1;
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
 const DRAW_CLOSEST_LINE_LIMIT_MAX = 9;
-const MIN_NODE_DIAMETER = 2;
-const MAX_NODE_DIAMETER = 5;
+const MIN_NODE_DIAMETER = 3;
+const MAX_NODE_DIAMETER = 6;
 
-const MOUSE_MAX_NODE_LINE_DISTANCE = 85;
+const MOUSE_MAX_NODE_LINE_DISTANCE = 125;
 // 0 endless, 1 bounce
 const CHOSEN_NODE_COORD_UPDATE_FUNCTION = 1;
 /* Adjusts the final grid cell size. The larder the grid cell the higher
  * probability of nodes being needlessly iterated. A lower value means
  * less consistent distance mechanics for a small performance gain.
  */
-const GRID_FACTOR = 0.85;
+const GRID_FACTOR = 1;
 
 // Draws a 3x3 grid around a group node based on `NODE_GARDEN_GROUP_GRID`
 var DEBUG_GROUP = false;
@@ -46,19 +46,19 @@ var lineRepr;
  * The range of this can be a random value between
  * `MIN_NODE_GROUP_PAINT_DISTANCE` and `MIN_NODE_GROUP_PAINT_DISTANCE`
  */
-const MAX_GROUP_NODES = 67;
+const MAX_GROUP_NODES = 167;
 // The maximum range a group node can extend its colour.
 // Also determines the `NODE_GARDEN_GROUP_GRID` cell size.
-const MAX_NODE_GROUP_PAINT_DISTANCE = 85;
+const MAX_NODE_GROUP_PAINT_DISTANCE = 185;
 // The minimum range a group node can extend its colour.
-const MIN_NODE_GROUP_PAINT_DISTANCE = 25;
+const MIN_NODE_GROUP_PAINT_DISTANCE = 55;
 // If true all nodes are respawn when mouse is pressed
 const REVIVE_ALL = true;
 // If true dead nodes just stop else they drift off the canvas
 const DEAD_NODES_STOP = false;
-const MAX_REVIVED_NODES = 200;
+const MAX_REVIVED_NODES = 400;
 const MAX_VELOCITY = 0.2;
-const MIN_VELOCITY = 0.01;
+const MIN_VELOCITY = 0.03;
 // When it reaches 0 the node will stop moving
 const MAX_LIFE_SPAN = 1000;
 // The speed of node aging
