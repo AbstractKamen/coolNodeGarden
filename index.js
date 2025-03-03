@@ -6,17 +6,17 @@ const WIDTH = Math.floor(window.innerWidth);
 const HEIGHT = Math.floor(window.innerHeight);
 
 const INITIAL_NUMBER_OF_NODES = 350;
-const MAX_NUMBER_OF_NODES = 5000;
+const MAX_NUMBER_OF_NODES = 3000;
 // When mouse is pressed
 const MAX_SPAWN_NODES = 200;
 const MIN_SPAWN_NODES = 50;
-const MIN_LINE_NODES_SPAWN = 5;
+const MIN_LINE_NODES_SPAWN = 15;
 const MIN_GROUP_NODES_SPAWN = 3;
 const MAX_LINE_NODES = 1919;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
-const MAX_NODE_LINE_DISTANCE = 150;
-const MIN_NODE_LINE_DISTANCE = 75;
+const MAX_NODE_LINE_DISTANCE = 195;
+const MIN_NODE_LINE_DISTANCE = 115;
 const LINE_BIAS_INFLUENCE = 1;
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
@@ -24,7 +24,7 @@ const DRAW_CLOSEST_LINE_LIMIT_MAX = 9;
 const MIN_NODE_DIAMETER = 5;
 const MAX_NODE_DIAMETER = 10;
 
-const MOUSE_MAX_NODE_LINE_DISTANCE = 150;
+const MOUSE_MAX_NODE_LINE_DISTANCE = 113;
 // 0 endless, 1 bounce
 const CHOSEN_NODE_COORD_UPDATE_FUNCTION = 1;
 /* Adjusts the final grid cell size. The larder the grid cell the higher
