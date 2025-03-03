@@ -15,16 +15,16 @@ const MIN_GROUP_NODES_SPAWN = 3;
 const MAX_LINE_NODES = 1919;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
-const MAX_NODE_LINE_DISTANCE = 170;
+const MAX_NODE_LINE_DISTANCE = 85;
 const MIN_NODE_LINE_DISTANCE = 45;
 const LINE_BIAS_INFLUENCE = 1;
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
 const DRAW_CLOSEST_LINE_LIMIT_MAX = 9;
-const MIN_NODE_DIAMETER = 4;
-const MAX_NODE_DIAMETER = 8;
+const MIN_NODE_DIAMETER = 5;
+const MAX_NODE_DIAMETER = 10;
 
-const MOUSE_MAX_NODE_LINE_DISTANCE = 200;
+const MOUSE_MAX_NODE_LINE_DISTANCE = 150;
 // 0 endless, 1 bounce
 const CHOSEN_NODE_COORD_UPDATE_FUNCTION = 1;
 /* Adjusts the final grid cell size. The larder the grid cell the higher
@@ -46,7 +46,7 @@ var lineRepr;
  * The range of this can be a random value between
  * `MIN_NODE_GROUP_PAINT_DISTANCE` and `MIN_NODE_GROUP_PAINT_DISTANCE`
  */
-const MAX_GROUP_NODES = 167;
+const MAX_GROUP_NODES = 67;
 // The maximum range a group node can extend its colour.
 // Also determines the `NODE_GARDEN_GROUP_GRID` cell size.
 const MAX_NODE_GROUP_PAINT_DISTANCE = 350;
@@ -71,7 +71,7 @@ const LINE_COLOUR = "#7097A8";
 
 const WIDTH_OFFSET = 0;
 const HEIGHT_OFFSET = HEIGHT * 0.08;
-const REL_MIN_TEXT_SIZE = HEIGHT * 0.01;
+const REL_MIN_TEXT_SIZE = HEIGHT * 0.02;
 const TEXT_COLOUR = "#296664";
 const TEXT_BACKGROUND_COLOUR = "#0F0F1DF7";
 // ########################################################################
