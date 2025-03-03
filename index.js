@@ -15,8 +15,8 @@ const MIN_GROUP_NODES_SPAWN = 3;
 const MAX_LINE_NODES = 1919;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
-const MAX_NODE_LINE_DISTANCE = 85;
-const MIN_NODE_LINE_DISTANCE = 45;
+const MAX_NODE_LINE_DISTANCE = 150;
+const MIN_NODE_LINE_DISTANCE = 75;
 const LINE_BIAS_INFLUENCE = 1;
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
@@ -49,9 +49,9 @@ var lineRepr;
 const MAX_GROUP_NODES = 67;
 // The maximum range a group node can extend its colour.
 // Also determines the `NODE_GARDEN_GROUP_GRID` cell size.
-const MAX_NODE_GROUP_PAINT_DISTANCE = 350;
+const MAX_NODE_GROUP_PAINT_DISTANCE = 190;
 // The minimum range a group node can extend its colour.
-const MIN_NODE_GROUP_PAINT_DISTANCE = 155;
+const MIN_NODE_GROUP_PAINT_DISTANCE = 85;
 // If true all nodes are respawn when mouse is pressed
 const REVIVE_ALL = true;
 // If true dead nodes just stop else they drift off the canvas
@@ -71,7 +71,7 @@ const LINE_COLOUR = "#7097A8";
 
 const WIDTH_OFFSET = 0;
 const HEIGHT_OFFSET = HEIGHT * 0.08;
-const REL_MIN_TEXT_SIZE = HEIGHT * 0.02;
+const REL_MIN_TEXT_SIZE = HEIGHT * 0.015;
 const TEXT_COLOUR = "#296664";
 const TEXT_BACKGROUND_COLOUR = "#0F0F1DF7";
 // ########################################################################
