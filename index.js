@@ -15,14 +15,14 @@ const MIN_GROUP_NODES_SPAWN = 3;
 const MAX_LINE_NODES = 1919;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
-const MAX_NODE_LINE_DISTANCE = 195;
-const MIN_NODE_LINE_DISTANCE = 115;
+const MAX_NODE_LINE_DISTANCE = 135;
+const MIN_NODE_LINE_DISTANCE = 45;
 const LINE_BIAS_INFLUENCE = 1;
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
 const DRAW_CLOSEST_LINE_LIMIT_MAX = 9;
-const MIN_NODE_DIAMETER = 5;
-const MAX_NODE_DIAMETER = 10;
+const MIN_NODE_DIAMETER = 4;
+const MAX_NODE_DIAMETER = 9;
 
 const MOUSE_MAX_NODE_LINE_DISTANCE = 113;
 // 0 endless, 1 bounce
@@ -31,7 +31,7 @@ const CHOSEN_NODE_COORD_UPDATE_FUNCTION = 1;
  * probability of nodes being needlessly iterated. A lower value means
  * less consistent distance mechanics for a small performance gain.
  */
-const GRID_FACTOR = 1;
+const GRID_FACTOR = 0.9;
 
 // Draws a 3x3 grid around a group node based on `NODE_GARDEN_GROUP_GRID`
 var DEBUG_GROUP = false;
@@ -46,12 +46,12 @@ var lineRepr;
  * The range of this can be a random value between
  * `MIN_NODE_GROUP_PAINT_DISTANCE` and `MIN_NODE_GROUP_PAINT_DISTANCE`
  */
-const MAX_GROUP_NODES = 67;
+const MAX_GROUP_NODES = 47;
 // The maximum range a group node can extend its colour.
 // Also determines the `NODE_GARDEN_GROUP_GRID` cell size.
-const MAX_NODE_GROUP_PAINT_DISTANCE = 190;
+const MAX_NODE_GROUP_PAINT_DISTANCE = 160;
 // The minimum range a group node can extend its colour.
-const MIN_NODE_GROUP_PAINT_DISTANCE = 85;
+const MIN_NODE_GROUP_PAINT_DISTANCE = 50;
 // If true all nodes are respawn when mouse is pressed
 const REVIVE_ALL = true;
 // If true dead nodes just stop else they drift off the canvas
