@@ -6,25 +6,26 @@ const WIDTH = Math.floor(window.innerWidth);
 const HEIGHT = Math.floor(window.innerHeight);
 
 const INITIAL_NUMBER_OF_NODES = 350;
-const MAX_NUMBER_OF_NODES = 1150;
+const MAX_NUMBER_OF_NODES = 1350;
 // When mouse is pressed
 const MAX_SPAWN_NODES = 250;
 const MIN_SPAWN_NODES = 50;
 const MIN_LINE_NODES_SPAWN = 15;
 const MIN_GROUP_NODES_SPAWN = 3;
-const MAX_LINE_NODES = 719;
+const MAX_LINE_NODES = 519;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
-const MAX_NODE_LINE_DISTANCE = 135;
-const MIN_NODE_LINE_DISTANCE = 55;
+const MAX_NODE_LINE_DISTANCE = 89;
+const MIN_NODE_LINE_DISTANCE = 35;
 const LINE_BIAS_INFLUENCE = 1;
+
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
-const DRAW_CLOSEST_LINE_LIMIT_MAX = 13;
-const MIN_NODE_DIAMETER = 6;
-const MAX_NODE_DIAMETER = 13;
+const DRAW_CLOSEST_LINE_LIMIT_MAX = 11;
+const MIN_NODE_DIAMETER = 4;
+const MAX_NODE_DIAMETER = 8;
 
-const MOUSE_MAX_NODE_LINE_DISTANCE = 113;
+const MOUSE_MAX_NODE_LINE_DISTANCE = 1;
 // 0 endless, 1 bounce
 const CHOSEN_NODE_COORD_UPDATE_FUNCTION = 1;
 /* Adjusts the final grid cell size. The larder the grid cell the higher
@@ -46,10 +47,10 @@ var lineRepr;
  * The range of this can be a random value between
  * `MIN_NODE_GROUP_PAINT_DISTANCE` and `MIN_NODE_GROUP_PAINT_DISTANCE`
  */
-const MAX_GROUP_NODES = 37;
+const MAX_GROUP_NODES = 47;
 // The maximum range a group node can extend its colour.
 // Also determines the `NODE_GARDEN_GROUP_GRID` cell size.
-const MAX_NODE_GROUP_PAINT_DISTANCE = 210;
+const MAX_NODE_GROUP_PAINT_DISTANCE = 135;
 // The minimum range a group node can extend its colour.
 const MIN_NODE_GROUP_PAINT_DISTANCE = 50;
 // If true all nodes are respawn when mouse is pressed
@@ -351,30 +352,16 @@ function pauseIfNotFocused() {
   }
 }
 
-function drawLineCells() {
-  for (let i = 0; i < NODE_GARDEN_LINE_GRID.gridHeight; ++i) {
-    for (let j = 0; j < NODE_GARDEN_LINE_GRID.gridWidth; ++j) {
-      let currentCell = NODE_GARDEN_LINE_GRID.getCell(i, j, 0, 0);
-
-      for (let k = 0; k < currentCell.length; ++k) {
-        let currentNode = currentCell[k];
-        for (let l = k + 1; l < currentCell.length; ++l) {
-          let adjacentNode = currentCell[k];
-        }
-      }
-    }
-  }
-}
-
 function drawCurrentNode(currentNode) {
   if (currentNode.isDead && !DEAD_NODES_STOP) return;
-  stroke(currentNode.colour);
-  strokeWeight(currentNode.diameter);
-  point(currentNode.x, currentNode.y);
   drawMouseLine(currentNode);
   drawLineNodeConnections(currentNode);
   drawGroupNodeConnections(currentNode);
+  stroke(currentNode.colour);
+  strokeWeight(currentNode.diameter);
+  point(currentNode.x, currentNode.y);
 }
+
 function drawGroupNodeConnections(currentNode) {
   if (!currentNode.isGroupNode) return;
   for (let dy = -1; dy <= 1; ++dy) {
@@ -408,7 +395,7 @@ function drawGroupNodeConnections(currentNode) {
   ) {
     let nodeLine = distancesHeap.pop();
     let diff = nodeLine.distance / currentNode.lineDistSq;
-    strokeWeight(1 - diff);
+    strokeWeight((currentNode.diameter >> 1) - (currentNode.diameter >> 1) * diff);
     stroke(currentNode.lineColour);
     line(nodeLine.x1, nodeLine.y1, nodeLine.x2, nodeLine.y2);
   }
@@ -447,7 +434,7 @@ function drawLineNodeConnections(currentNode) {
   ) {
     let nodeLine = distancesHeap.pop();
     let diff = nodeLine.distance / currentNode.lineDistSq;
-    strokeWeight(1 - diff);
+    strokeWeight((currentNode.diameter >> 1) - (currentNode.diameter >> 1) * diff);
     stroke(currentNode.lineColour);
     line(nodeLine.x1, nodeLine.y1, nodeLine.x2, nodeLine.y2);
   }
@@ -609,10 +596,11 @@ function makeLineNode(x, y, node) {
 
 // https://stackoverflow.com/questions/29325069/how-to-generate-random-numbers-biased-towards-one-value-in-a-range
 function getRndBias(min, max, bias, influence) {
-  var rnd = Math.random() * (max - min) + min,   // random in range
-      mix = Math.random() * influence;           // random mixer
-  return rnd * (1 - mix) + bias * mix;           // mix full range and bias
+  var rnd = Math.random() * (max - min) + min, // random in range
+    mix = Math.random() * influence; // random mixer
+  return rnd * (1 - mix) + bias * mix; // mix full range and bias
 }
+
 function makeGroupNode(x, y, node) {
   let wasUndefined = node == undefined;
   node = makeNode(x, y, node);
@@ -902,13 +890,13 @@ const BTN_WIDTH = HEIGHT_OFFSET * 0.25;
 const BTN_HEIGHT = HEIGHT_OFFSET * 0.25;
 
 const debugGroupNodesBtn = {
-  x: 120,
+  x: 160,
   y: HEIGHT_OFFSET * 0.45,
   width: BTN_WIDTH,
   height: BTN_HEIGHT
 }
 const debugLineNodesBtn = {
-  x: 120,
+  x: 160,
   y: HEIGHT_OFFSET * 0.70,
   width: BTN_WIDTH,
   height: BTN_HEIGHT
@@ -937,7 +925,7 @@ function drawNodeGardenHeader() {
 
   strokeWeight(0.1);
   textSize(REL_MIN_TEXT_SIZE);
-  text(`Click to Debug Grids`, 40, HEIGHT * 0.05, 80);
+  text(`Click to Debug Grids`, 90, HEIGHT * 0.05, 80);
 
   fill(debugColour);
   rect(debugGroupNodesBtn.x, debugGroupNodesBtn.y, debugGroupNodesBtn.width, debugGroupNodesBtn.height);
