@@ -6,23 +6,23 @@ const WIDTH = Math.floor(window.innerWidth);
 const HEIGHT = Math.floor(window.innerHeight);
 
 const INITIAL_NUMBER_OF_NODES = 350;
-const MAX_NUMBER_OF_NODES = 3000;
+const MAX_NUMBER_OF_NODES = 1150;
 // When mouse is pressed
-const MAX_SPAWN_NODES = 200;
+const MAX_SPAWN_NODES = 250;
 const MIN_SPAWN_NODES = 50;
 const MIN_LINE_NODES_SPAWN = 15;
 const MIN_GROUP_NODES_SPAWN = 3;
-const MAX_LINE_NODES = 1919;
+const MAX_LINE_NODES = 719;
 // The max distance between nodes where a line could be drawn.
 // Also determines the `NODE_GARDEN_LINE_GRID` cell size.
 const MAX_NODE_LINE_DISTANCE = 135;
-const MIN_NODE_LINE_DISTANCE = 45;
+const MIN_NODE_LINE_DISTANCE = 55;
 const LINE_BIAS_INFLUENCE = 1;
 // Draws only the closest # lines
 const DRAW_CLOSEST_LINE_LIMIT_MIN = 1;
-const DRAW_CLOSEST_LINE_LIMIT_MAX = 9;
-const MIN_NODE_DIAMETER = 4;
-const MAX_NODE_DIAMETER = 9;
+const DRAW_CLOSEST_LINE_LIMIT_MAX = 13;
+const MIN_NODE_DIAMETER = 6;
+const MAX_NODE_DIAMETER = 13;
 
 const MOUSE_MAX_NODE_LINE_DISTANCE = 113;
 // 0 endless, 1 bounce
@@ -46,10 +46,10 @@ var lineRepr;
  * The range of this can be a random value between
  * `MIN_NODE_GROUP_PAINT_DISTANCE` and `MIN_NODE_GROUP_PAINT_DISTANCE`
  */
-const MAX_GROUP_NODES = 47;
+const MAX_GROUP_NODES = 37;
 // The maximum range a group node can extend its colour.
 // Also determines the `NODE_GARDEN_GROUP_GRID` cell size.
-const MAX_NODE_GROUP_PAINT_DISTANCE = 160;
+const MAX_NODE_GROUP_PAINT_DISTANCE = 210;
 // The minimum range a group node can extend its colour.
 const MIN_NODE_GROUP_PAINT_DISTANCE = 50;
 // If true all nodes are respawn when mouse is pressed
@@ -345,6 +345,7 @@ function pauseIfNotFocused() {
       noLoop();
     }
   } else {
+    if (isPaused) deltaTime = 0;
     isPaused = false;
     loop();
   }
@@ -901,14 +902,14 @@ const BTN_WIDTH = HEIGHT_OFFSET * 0.25;
 const BTN_HEIGHT = HEIGHT_OFFSET * 0.25;
 
 const debugGroupNodesBtn = {
-  x: WIDTH * 0.3,
-  y: HEIGHT_OFFSET * 0.50,
+  x: 120,
+  y: HEIGHT_OFFSET * 0.45,
   width: BTN_WIDTH,
   height: BTN_HEIGHT
 }
 const debugLineNodesBtn = {
-  x: WIDTH * 0.3,
-  y: HEIGHT_OFFSET * 0.75,
+  x: 120,
+  y: HEIGHT_OFFSET * 0.70,
   width: BTN_WIDTH,
   height: BTN_HEIGHT
 }
@@ -926,17 +927,17 @@ function drawNodeGardenHeader() {
     `Moving Nodes:${
       Math.min(MAX_NUMBER_OF_NODES, NODES.length) - DEAD_NODES.length
     }\nStopped Nodes:${DEAD_NODES.length}`,
-    WIDTH * 0.86,
+    WIDTH * 0.80,
     HEIGHT * 0.01,
     WIDTH * 0.14
   );
   strokeWeight(HEIGHT_OFFSET * 0.02);
   textSize(HEIGHT_OFFSET * 0.4);
-  text(`Node Garden`, WIDTH * 0.005, HEIGHT * 0.01, WIDTH * 0.66);
+  text(`Node Garden`, 20, HEIGHT * 0.01, 40);
 
   strokeWeight(0.1);
   textSize(REL_MIN_TEXT_SIZE);
-  text(`Click to Debug Grids`, WIDTH * 0.005, HEIGHT * 0.05, WIDTH * 0.2);
+  text(`Click to Debug Grids`, 40, HEIGHT * 0.05, 80);
 
   fill(debugColour);
   rect(debugGroupNodesBtn.x, debugGroupNodesBtn.y, debugGroupNodesBtn.width, debugGroupNodesBtn.height);
